@@ -35,3 +35,4 @@ def Register(auth, email, password):
         elif errorMessage == "EMAIL_EXISTS":
             print("Email already exists!")
         return None
+
