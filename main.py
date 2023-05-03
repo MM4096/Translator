@@ -1,9 +1,8 @@
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QVBoxLayout, QGridLayout, QLineEdit
 import sys
 import pyrebase
 from auth import Login, Register
-
 
 firebaseConfig = {
     "apiKey": "AIzaSyDE6yjJa9JfNSasdkZ6qIGq62dEvDMTVSI",
@@ -18,20 +17,113 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 db = firebase.database()
 
+user = None
 
-class MainWindow(QMainWindow):
+
+class LoginRegisterWindow(QWidget):
+    def __init__(self, defaultLayout):
+
+        self.setUpNormal = defaultLayout == "login"
+
+        super().__init__()
+        self.setWindowTitle("Translator - Login")
+
+        self.label = QLabel("Login")
+
+        self.usernameInput = QLineEdit()
+        self.usernameInput.setPlaceholderText("Enter your email")
+
+        self.passwordInput = QLineEdit()
+        self.passwordInput.setPlaceholderText("Enter your password")
+        self.passwordInput.setEchoMode(QLineEdit.EchoMode.Password)
+
+        self.confirmPasswordInput = QLineEdit()
+        self.confirmPasswordInput.setPlaceholderText("Confirm your password")
+        self.confirmPasswordInput.setEchoMode(QLineEdit.EchoMode.Password)
+
+        self.submitButton = QPushButton("Login")
+        self.submitButton.clicked.connect(self.Login)
+
+        self.switchButton = QPushButton("No account? Sign up")
+        self.switchButton.clicked.connect(self.Switch)
+
+        layout = QGridLayout()
+
+        layout.addWidget(self.label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(self.usernameInput, 1, 1, 1, 2)
+        layout.addWidget(self.passwordInput, 2, 1, 1, 2)
+        layout.addWidget(self.confirmPasswordInput, 3, 1, 1, 2)
+        layout.addWidget(self.switchButton, 4, 1, 1, 2)
+        layout.addWidget(self.submitButton, 5, 1, 1, 2)
+
+        self.confirmPasswordInput.hide()
+
+        if not self.setUpNormal:
+            self.confirmPasswordInput.show()
+            self.switchButton.setText("Already have an account? Login")
+            self.submitButton.setText("Sign up")
+            self.label.setText("Register")
+            self.setWindowTitle("Translator - Register")
+
+        self.setLayout(layout)
+
+        self.setGeometry(300, 300, 800, 600)
+        self.show()
+
+    def Login(self):
+        print("Hello world!")
+
+    def Switch(self):
+        self.setUpNormal = not self.setUpNormal
+
+        if self.setUpNormal:
+            self.setWindowTitle("Translator - Login")
+            self.switchButton.setText("No account? Sign up")
+            self.submitButton.setText("Login")
+            self.confirmPasswordInput.hide()
+            self.label.setText("Login")
+        else:
+            self.setWindowTitle("Translator - Register")
+            self.switchButton.setText("Already have an account? Login")
+            self.submitButton.setText("Sign up")
+            self.confirmPasswordInput.show()
+            self.label.setText("Register")
+
+
+
+
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Translator")
 
-        label = QLabel("Hello world!")
+        label = QLabel("Translator")
+        loginButton = QPushButton("Login")
+        loginButton.clicked.connect(self.Login)
+        registerButton = QPushButton("Register")
+        registerButton.clicked.connect(self.Register)
+        pricingButton = QPushButton("Pricing")
+        pricingButton.clicked.connect(self.Pricing)
 
-        self.setFixedSize(QSize(400, 300))
+        layout = QGridLayout()
 
-        # Set the central widget of the Window.
-        self.setCentralWidget(label)
+        layout.addWidget(label, 0, 0, 1, 3, Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(loginButton, 2, 1, 1, 1)
+        layout.addWidget(registerButton, 3, 1, 1, 1)
+        layout.addWidget(pricingButton, 4, 1, 1, 1)
 
-    def DoSomeStuff(self):
+        self.setLayout(layout)
+
+        self.setGeometry(300, 300, 800, 600)
+        self.show()
+
+    def Login(self):
+        print("Hello world!")
+
+    def Register(self):
+        print("Hello world!")
+
+    def Pricing(self):
         print("Hello world!")
 
 
@@ -42,7 +134,6 @@ if __name__ == "__main__":
     # user = Register(auth, username, password)
     app = QApplication(sys.argv)
 
-    window = MainWindow()
-    window.show()
+    window = LoginRegisterWindow("login")
 
     app.exec()
