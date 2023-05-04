@@ -1,5 +1,9 @@
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QVBoxLayout, QGridLayout, QLineEdit
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QVBoxLayout, QGridLayout, \
+    QLineEdit, QStackedWidget, QHBoxLayout
+
+from enum import Enum
+
 import sys
 import pyrebase
 from auth import Login, Register
@@ -66,8 +70,6 @@ class LoginRegisterWindow(QWidget):
             self.setWindowTitle("Translator - Register")
 
         self.setLayout(layout)
-
-        self.setGeometry(300, 300, 800, 600)
         self.show()
 
     def Login(self):
@@ -88,8 +90,6 @@ class LoginRegisterWindow(QWidget):
             self.submitButton.setText("Sign up")
             self.confirmPasswordInput.show()
             self.label.setText("Register")
-
-
 
 
 class MainWindow(QWidget):
@@ -113,18 +113,38 @@ class MainWindow(QWidget):
         layout.addWidget(pricingButton, 4, 1, 1, 1)
 
         self.setLayout(layout)
-
-        self.setGeometry(300, 300, 800, 600)
         self.show()
 
     def Login(self):
-        print("Hello world!")
+        window.SetActiveWindow(WindowManager.Windows.LoginRegisterPage)
 
     def Register(self):
         print("Hello world!")
 
     def Pricing(self):
         print("Hello world!")
+
+
+class WindowManager(QHBoxLayout):
+    class Windows(Enum):
+        MainPage = 0
+        LoginRegisterPage = 1
+
+    def __init__(self):
+        super().__init__()
+        self.LoginRegisterWindow = LoginRegisterWindow("login")
+        self.MenuWindow = MainWindow()
+        self.addWidget(self.LoginRegisterWindow)
+        self.addWidget(self.MenuWindow)
+        self.SetActiveWindow(self.Windows.MainPage)
+
+    def SetActiveWindow(self, showWindow):
+        self.MenuWindow.hide()
+        self.LoginRegisterWindow.hide()
+        if showWindow == self.Windows.MainPage:
+            self.MenuWindow.show()
+        elif showWindow == self.Windows.LoginRegisterPage:
+            self.LoginRegisterWindow.show()
 
 
 if __name__ == "__main__":
@@ -134,6 +154,9 @@ if __name__ == "__main__":
     # user = Register(auth, username, password)
     app = QApplication(sys.argv)
 
-    window = LoginRegisterWindow("login")
+    window = QWidget()
+    window.setLayout(WindowManager())
+    window.setGeometry(300, 300, 800, 600)
+    window.show()
 
     app.exec()
