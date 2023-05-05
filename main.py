@@ -23,16 +23,13 @@ db = firebase.database()
 
 user = None
 
-
-class LoginRegisterWindow(QWidget):
-    def __init__(self, defaultLayout):
-
-        self.setUpNormal = defaultLayout == "login"
+class LoginWindow(QWidget):
+    def __init__(self):
 
         super().__init__()
-        self.setWindowTitle("Translator - Login")
+        self.setWindowTitle("Translator - Sign up")
 
-        self.label = QLabel("Login")
+        self.label = QLabel("Sign up")
 
         self.usernameInput = QLineEdit()
         self.usernameInput.setPlaceholderText("Enter your email")
@@ -45,10 +42,10 @@ class LoginRegisterWindow(QWidget):
         self.confirmPasswordInput.setPlaceholderText("Confirm your password")
         self.confirmPasswordInput.setEchoMode(QLineEdit.EchoMode.Password)
 
-        self.submitButton = QPushButton("Login")
+        self.submitButton = QPushButton("Sign up")
         self.submitButton.clicked.connect(self.Login)
 
-        self.switchButton = QPushButton("No account? Sign up")
+        self.switchButton = QPushButton("Already have an account? Sign in")
         self.switchButton.clicked.connect(self.Switch)
 
         layout = QGridLayout()
@@ -62,37 +59,55 @@ class LoginRegisterWindow(QWidget):
 
         self.confirmPasswordInput.hide()
 
-        if not self.setUpNormal:
-            self.confirmPasswordInput.show()
-            self.switchButton.setText("Already have an account? Login")
-            self.submitButton.setText("Sign up")
-            self.label.setText("Register")
-            self.setWindowTitle("Translator - Register")
-
         self.setLayout(layout)
         self.show()
 
-    def Login(self):
+    def Register(self):
         print("Hello world!")
 
     def Switch(self):
-        self.setUpNormal = not self.setUpNormal
-
-        if self.setUpNormal:
-            self.setWindowTitle("Translator - Login")
-            self.switchButton.setText("No account? Sign up")
-            self.submitButton.setText("Login")
-            self.confirmPasswordInput.hide()
-            self.label.setText("Login")
-        else:
-            self.setWindowTitle("Translator - Register")
-            self.switchButton.setText("Already have an account? Login")
-            self.submitButton.setText("Sign up")
-            self.confirmPasswordInput.show()
-            self.label.setText("Register")
+        pass
 
 
-class MainWindow(QWidget):
+class RegisterWindow(QGridLayout):
+    def __init__(self):
+
+        super().__init__()
+
+        self.label = QLabel("Sign up")
+
+        self.usernameInput = QLineEdit()
+        self.usernameInput.setPlaceholderText("Enter your email")
+
+        self.passwordInput = QLineEdit()
+        self.passwordInput.setPlaceholderText("Enter your password")
+        self.passwordInput.setEchoMode(QLineEdit.EchoMode.Password)
+
+        self.confirmPasswordInput = QLineEdit()
+        self.confirmPasswordInput.setPlaceholderText("Confirm your password")
+        self.confirmPasswordInput.setEchoMode(QLineEdit.EchoMode.Password)
+
+        self.submitButton = QPushButton("Sign up")
+        self.submitButton.clicked.connect(self.Register())
+
+        self.switchButton = QPushButton("Already have an account? Sign in")
+        self.switchButton.clicked.connect(self.Switch)
+
+        self.addWidget(self.label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignHCenter)
+        self.addWidget(self.usernameInput, 1, 1, 1, 2)
+        self.addWidget(self.passwordInput, 2, 1, 1, 2)
+        self.addWidget(self.confirmPasswordInput, 3, 1, 1, 2)
+        self.addWidget(self.switchButton, 4, 1, 1, 2)
+        self.addWidget(self.submitButton, 5, 1, 1, 2)
+
+    def Register(self):
+        print("Hello world!")
+
+    def Switch(self):
+        pass
+
+
+class MainWindow(QGridLayout):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Translator")
@@ -105,15 +120,10 @@ class MainWindow(QWidget):
         pricingButton = QPushButton("Pricing")
         pricingButton.clicked.connect(self.Pricing)
 
-        layout = QGridLayout()
-
-        layout.addWidget(label, 0, 0, 1, 3, Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(loginButton, 2, 1, 1, 1)
-        layout.addWidget(registerButton, 3, 1, 1, 1)
-        layout.addWidget(pricingButton, 4, 1, 1, 1)
-
-        self.setLayout(layout)
-        self.show()
+        self.addWidget(label, 0, 0, 1, 3, Qt.AlignmentFlag.AlignHCenter)
+        self.addWidget(loginButton, 2, 1, 1, 1)
+        self.addWidget(registerButton, 3, 1, 1, 1)
+        self.addWidget(pricingButton, 4, 1, 1, 1)
 
     def Login(self):
         window.SetActiveWindow(WindowManager.Windows.LoginRegisterPage)
@@ -125,26 +135,22 @@ class MainWindow(QWidget):
         print("Hello world!")
 
 
-class WindowManager(QHBoxLayout):
+class WindowManager(QWidget):
     class Windows(Enum):
         MainPage = 0
         LoginRegisterPage = 1
 
     def __init__(self):
         super().__init__()
-        self.LoginRegisterWindow = LoginRegisterWindow("login")
+        self.LoginWindow = LoginWindow()
         self.MenuWindow = MainWindow()
-        self.addWidget(self.LoginRegisterWindow)
-        self.addWidget(self.MenuWindow)
         self.SetActiveWindow(self.Windows.MainPage)
 
     def SetActiveWindow(self, showWindow):
-        self.MenuWindow.hide()
-        self.LoginRegisterWindow.hide()
         if showWindow == self.Windows.MainPage:
-            self.MenuWindow.show()
+            self.setLayout(self.MenuWindow)
         elif showWindow == self.Windows.LoginRegisterPage:
-            self.LoginRegisterWindow.show()
+            self.setLayout(self.LoginRegisterWindow)
 
 
 if __name__ == "__main__":
