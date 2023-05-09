@@ -1,20 +1,21 @@
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QVBoxLayout, QGridLayout, \
-    QLineEdit, QStackedWidget, QHBoxLayout, QFrame
+    QLineEdit, QStackedWidget, QHBoxLayout, QFrame, QDialog, QDialogButtonBox
 
 from enum import Enum
 
 import sys
 import pyrebase
-from auth import Login, Register
+from auth import Login, Register, ReturnEnum
 
 firebaseConfig = {
-    "apiKey": "AIzaSyDE6yjJa9JfNSasdkZ6qIGq62dEvDMTVSI",
-    "authDomain": "test-4fad1.firebaseapp.com",
-    "databaseURL": "https://test-4fad1-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "storageBucket": "test-4fad1.appspot.com",
-    "messagingSenderId": "579594052865",
-    "appId": "1:579594052865:web:a9389d58d5fc5b5352a700"
+    "apiKey": "AIzaSyD9xGtjutq5jqbNJaCbLUmiv-FS0l2lJ8c",
+    "authDomain": "translator-35a8b.firebaseapp.com",
+    "projectId": "translator-35a8b",
+    "storageBucket": "translator-35a8b.appspot.com",
+    "messagingSenderId": "662457562337",
+    "appId": "1:662457562337:web:1982e7fd646e56d447b3a0",
+    "databaseURL": "https://translator-35a8b-default-rtdb.asia-southeast1.firebasedatabase.app",
 }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
@@ -28,7 +29,7 @@ class LoginWindow(QGridLayout):
     def __init__(self):
         super().__init__()
 
-        self.label = QLabel("Sign in")
+        self.label = QLabel("Log in")
 
         self.usernameInput = QLineEdit()
         self.usernameInput.setPlaceholderText("Enter your email")
@@ -41,7 +42,7 @@ class LoginWindow(QGridLayout):
         self.confirmPasswordInput.setPlaceholderText("Confirm your password")
         self.confirmPasswordInput.setEchoMode(QLineEdit.EchoMode.Password)
 
-        self.submitButton = QPushButton("Sign up")
+        self.submitButton = QPushButton("Log in")
         self.submitButton.clicked.connect(self.Login)
 
         self.switchButton = QPushButton("Don't have an account? Sign up")
@@ -50,15 +51,44 @@ class LoginWindow(QGridLayout):
         self.backButton = QPushButton("Back")
         self.backButton.clicked.connect(self.Back)
 
+        self.usernameError = QLabel()
+        self.usernameError.setStyleSheet("color: red")
+        self.passwordError = QLabel()
+        self.passwordError.setStyleSheet("color: red")
+
         self.addWidget(self.label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignHCenter)
         self.addWidget(self.usernameInput, 1, 1, 1, 2)
+        self.addWidget(self.usernameError, 1, 3, 1, 1)
         self.addWidget(self.passwordInput, 2, 1, 1, 2)
+        self.addWidget(self.passwordError, 2, 3, 1, 1)
         self.addWidget(self.switchButton, 4, 1, 1, 2)
         self.addWidget(self.submitButton, 5, 1, 1, 2)
         self.addWidget(self.backButton, 6, 1, 1, 2)
 
     def Login(self):
-        print("Hello world!")
+        self.usernameError.setText("")
+        self.passwordError.setText("")
+        result = Login(auth, self.usernameInput.text(), self.passwordInput.text())
+        global user
+        user = result[0]
+
+        returnMessage = result[1]
+
+        if user is not None:
+            self.usernameInput.setText("")
+            self.passwordInput.setText("")
+            window.SetActiveWindow(window.MenuWindow)
+        else:
+            if returnMessage == ReturnEnum.USER_DISABLED:
+                self.usernameError.setText("User is disabled")
+            elif returnMessage == ReturnEnum.INVALID_EMAIL:
+                self.usernameError.setText("Invalid email")
+            elif returnMessage == ReturnEnum.INVALID_PASSWORD:
+                self.passwordError.setText("Incorrect password")
+            elif returnMessage == ReturnEnum.EMAIL_NOT_FOUND:
+                self.usernameError.setText("Account not found")
+            elif returnMessage == ReturnEnum.TOO_MANY_ATTEMPTS_TRY_LATER:
+                self.usernameError.setText("Too many attempts, try again later")
 
     def Switch(self):
         window.SetActiveWindow(window.RegisterWindow)
@@ -93,22 +123,72 @@ class RegisterWindow(QGridLayout):
         self.backButton = QPushButton("Back")
         self.backButton.clicked.connect(self.Back)
 
+        self.usernameError = QLabel()
+        self.usernameError.setStyleSheet("color: red")
+        self.passwordError = QLabel()
+        self.passwordError.setStyleSheet("color: red")
+        self.confirmPasswordError = QLabel()
+        self.confirmPasswordError.setStyleSheet("color: red")
+
         self.addWidget(self.label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignHCenter)
         self.addWidget(self.usernameInput, 1, 1, 1, 2)
+        self.addWidget(self.usernameError, 1, 3, 1, 1)
         self.addWidget(self.passwordInput, 2, 1, 1, 2)
+        self.addWidget(self.passwordError, 2, 3, 1, 1)
         self.addWidget(self.confirmPasswordInput, 3, 1, 1, 2)
+        self.addWidget(self.confirmPasswordError, 3, 3, 1, 1)
         self.addWidget(self.switchButton, 4, 1, 1, 2)
         self.addWidget(self.submitButton, 5, 1, 1, 2)
         self.addWidget(self.backButton, 6, 1, 1, 2)
 
     def Register(self):
-        pass
+        self.usernameError.setText("")
+        self.passwordError.setText("")
+        self.confirmPasswordError.setText("")
+        if self.passwordInput.text() != self.confirmPasswordInput.text():
+            self.confirmPasswordError.setText("Passwords do not match")
+            return
+        result = Register(auth, self.usernameInput.text(), self.passwordInput.text())
+        global user
+        user = result[0]
+
+        returnMessage = result[1]
+
+        if user is not None:
+            user = None
+            self.usernameInput.hide()
+            self.passwordInput.hide()
+            self.confirmPasswordInput.hide()
+            self.switchButton.hide()
+            self.label.setText("A verification email has been sent to your email address. Please verify your account.")
+            self.submitButton.hide()
+            self.usernameInput.setText("")
+            self.passwordInput.setText("")
+            self.confirmPasswordInput.setText("")
+        else:
+            if returnMessage == ReturnEnum.EMAIL_EXISTS:
+                self.usernameError.setText("Email already exists")
+            elif returnMessage == ReturnEnum.INVALID_EMAIL:
+                self.usernameError.setText("Invalid email")
+            elif returnMessage == ReturnEnum.WEAK_PASSWORD:
+                self.passwordError.setText("Password too weak!")
 
     def Switch(self):
         window.SetActiveWindow(window.LoginWindow)
 
     def Back(self):
         window.SetActiveWindow(window.MenuWindow)
+
+    def Reset(self):
+        self.usernameInput.show()
+        self.passwordInput.show()
+        self.confirmPasswordInput.show()
+        self.switchButton.show()
+        self.label.setText("Sign up")
+        self.submitButton.show()
+        self.usernameInput.setText("")
+        self.passwordInput.setText("")
+        self.confirmPasswordInput.setText("")
 
 
 class MenuWindow(QGridLayout):
@@ -163,11 +243,14 @@ class WindowManager(QWidget):
         self.setLayout(self.Box)
         self.show()
 
+        self.setWindowTitle("Translator")
+
     def SetActiveWindow(self, showWindow):
         # hide all items currently in boxlayout
         self.LoginWindow.hide()
         self.MenuWindow.hide()
         self.RegisterWindow.hide()
+        self.FRegisterWindow.Reset()
 
         showWindow.show()
 
