@@ -6,7 +6,9 @@ from enum import Enum
 
 import sys
 import pyrebase
+import asyncio
 from auth import Login, Register, ReturnEnum
+from writeFiles import WriteData, ReadData
 
 firebaseConfig = {
     "apiKey": "AIzaSyD9xGtjutq5jqbNJaCbLUmiv-FS0l2lJ8c",
@@ -23,6 +25,42 @@ auth = firebase.auth()
 db = firebase.database()
 
 user = None
+
+
+class MainWindow(QGridLayout):
+    def __init__(self):
+        super().__init__()
+
+        self.label = QLabel("Translator")
+        self.translateButton = QPushButton("Translate")
+        self.translateButton.clicked.connect(self.TranslatePage)
+        self.transcribeButton = QPushButton("Transcribe")
+        self.transcribeButton.clicked.connect(self.TranscribePage)
+        self.pricingButton = QPushButton("Pricing")
+        self.pricingButton.clicked.connect(self.PricingPage)
+        self.logoutButton = QPushButton("Log out")
+        self.logoutButton.clicked.connect(self.Logout)
+
+        self.addWidget(self.label, 0, 0, 1, 3, Qt.AlignmentFlag.AlignHCenter)
+        self.addWidget(self.translateButton, 1, 1, 1, 1)
+        self.addWidget(self.transcribeButton, 2, 1, 1, 1)
+        self.addWidget(self.pricingButton, 3, 1, 1, 1)
+        self.addWidget(self.logoutButton, 4, 1, 1, 1)
+
+    def PricingPage(self):
+        window.SetActiveWindow(window.PricingWindow)
+
+    def TranslatePage(self):
+        pass
+
+    def TranscribePage(self):
+        pass
+
+    def Logout(self):
+        global user
+        user = None
+        WriteData("user.data", "")
+        window.SetActiveWindow(window.MenuWindow)
 
 
 class LoginWindow(QGridLayout):
@@ -68,7 +106,9 @@ class LoginWindow(QGridLayout):
     def Login(self):
         self.usernameError.setText("")
         self.passwordError.setText("")
-        result = Login(auth, self.usernameInput.text(), self.passwordInput.text())
+        email = self.usernameInput.text()
+        password = self.passwordInput.text()
+        result = Login(auth, email, password)
         global user
         user = result[0]
 
@@ -77,7 +117,8 @@ class LoginWindow(QGridLayout):
         if user is not None:
             self.usernameInput.setText("")
             self.passwordInput.setText("")
-            window.SetActiveWindow(window.MenuWindow)
+            WriteData("user.data", email + "," + password)
+            window.SetActiveWindow(window.MainWindow)
         else:
             if returnMessage == ReturnEnum.USER_DISABLED:
                 self.usernameError.setText("User is disabled")
@@ -95,6 +136,68 @@ class LoginWindow(QGridLayout):
 
     def Back(self):
         window.SetActiveWindow(window.MenuWindow)
+
+
+class PricingWindow(QVBoxLayout):
+    def __init__(self):
+        super().__init__()
+
+        self.label = QLabel("Pricing")
+
+        self.basicCredit = QVBoxLayout()
+
+        self.premiumCredit = QVBoxLayout()
+
+        self.bundleCredit = QVBoxLayout()
+
+        self.bcHeader = QLabel("Basic")
+        self.bcContent = QLabel("+ 10 minutes")
+        self.bcPrice = QLabel("$2")
+        self.bcButton = QPushButton("Buy")
+
+        self.basicCredit.addWidget(self.bcHeader)
+        self.basicCredit.addWidget(self.bcContent)
+        self.basicCredit.addWidget(self.bcPrice)
+        self.basicCredit.addWidget(self.bcButton)
+
+        self.pcHeader = QLabel("Premium")
+        self.pcContent = QLabel("+30 minutes")
+        self.pcPrice = QLabel("$5.50")
+        self.pcButton = QPushButton("Buy")
+
+        self.premiumCredit.addWidget(self.pcHeader)
+        self.premiumCredit.addWidget(self.pcContent)
+        self.premiumCredit.addWidget(self.pcPrice)
+        self.premiumCredit.addWidget(self.pcButton)
+
+        self.bundleHeader = QLabel("Bundle")
+        self.bundleContent = QLabel("+ 60 minutes")
+        self.bundlePrice = QLabel("$10")
+        self.bundleButton = QPushButton("Buy")
+
+        self.bundleCredit.addWidget(self.bundleHeader)
+        self.bundleCredit.addWidget(self.bundleContent)
+        self.bundleCredit.addWidget(self.bundlePrice)
+        self.bundleCredit.addWidget(self.bundleButton)
+
+        self.pricingLayouts = QHBoxLayout()
+
+        self.pricingLayouts.addLayout(self.basicCredit)
+        self.pricingLayouts.addLayout(self.premiumCredit)
+        self.pricingLayouts.addLayout(self.bundleCredit)
+
+        self.backButton = QPushButton("Back")
+        self.backButton.clicked.connect(self.Back)
+
+        self.addWidget(self.label, Qt.AlignmentFlag.AlignCenter)
+        self.addLayout(self.pricingLayouts, Qt.AlignmentFlag.AlignHCenter)
+        self.addWidget(self.backButton, Qt.AlignmentFlag.AlignCenter)
+
+    def Back(self):
+        if user is None:
+            window.SetActiveWindow(window.MenuWindow)
+        else:
+            window.SetActiveWindow(window.MainWindow)
 
 
 class RegisterWindow(QGridLayout):
@@ -204,9 +307,9 @@ class MenuWindow(QGridLayout):
         pricingButton.clicked.connect(self.Pricing)
 
         self.addWidget(label, 0, 0, 1, 3, Qt.AlignmentFlag.AlignHCenter)
-        self.addWidget(loginButton, 2, 1, 1, 1)
-        self.addWidget(registerButton, 3, 1, 1, 1)
-        self.addWidget(pricingButton, 4, 1, 1, 1)
+        self.addWidget(loginButton, 1, 1, 1, 1)
+        self.addWidget(registerButton, 2, 1, 1, 1)
+        self.addWidget(pricingButton, 3, 1, 1, 1)
 
     def Login(self):
         window.SetActiveWindow(window.LoginWindow)
@@ -215,7 +318,7 @@ class MenuWindow(QGridLayout):
         window.SetActiveWindow(window.RegisterWindow)
 
     def Pricing(self):
-        print("Hello world!")
+        window.SetActiveWindow(window.PricingWindow)
 
 
 class WindowManager(QWidget):
@@ -226,6 +329,8 @@ class WindowManager(QWidget):
         self.FLoginWindow = LoginWindow()
         self.FMenuWindow = MenuWindow()
         self.FRegisterWindow = RegisterWindow()
+        self.FMainWindow = MainWindow()
+        self.FPricingWindow = PricingWindow()
 
         self.LoginWindow = QFrame()
         self.LoginWindow.setLayout(self.FLoginWindow)
@@ -236,9 +341,17 @@ class WindowManager(QWidget):
         self.RegisterWindow = QFrame()
         self.RegisterWindow.setLayout(self.FRegisterWindow)
 
+        self.MainWindow = QFrame()
+        self.MainWindow.setLayout(self.FMainWindow)
+
+        self.PricingWindow = QFrame()
+        self.PricingWindow.setLayout(self.FPricingWindow)
+
         self.Box.addWidget(self.LoginWindow)
         self.Box.addWidget(self.MenuWindow)
         self.Box.addWidget(self.RegisterWindow)
+        self.Box.addWidget(self.MainWindow)
+        self.Box.addWidget(self.PricingWindow)
 
         self.setLayout(self.Box)
         self.show()
@@ -250,17 +363,30 @@ class WindowManager(QWidget):
         self.LoginWindow.hide()
         self.MenuWindow.hide()
         self.RegisterWindow.hide()
+        self.MainWindow.hide()
         self.FRegisterWindow.Reset()
+        self.PricingWindow.hide()
 
         showWindow.show()
+
+
+async def LoginSavedUser():
+    savedUser = ReadData("user.data")
+    if savedUser != "":
+        global user
+        user = Login(auth, savedUser[0], savedUser[1])
+        if user is not None:
+            window.SetActiveWindow(window.MainWindow)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     window = WindowManager()
-    window.setGeometry(300, 300, 800, 600)
+    window.setFixedSize(600, 600)
     window.show()
     window.SetActiveWindow(window.MenuWindow)
+
+    asyncio.run(LoginSavedUser())
 
     app.exec()
