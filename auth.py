@@ -58,3 +58,13 @@ def ForgotPassword(auth, email):
         if errorMessage == "EMAIL_NOT_FOUND":
             return ReturnEnum.EMAIL_NOT_FOUND
         return None
+
+
+def ResendVerificationEmail(auth, user):
+    try:
+        auth.send_email_verification(user['idToken'])
+    except requests.exceptions.HTTPError as err:
+        errorMessage = json.loads(err.args[1])["error"]["message"]
+        if errorMessage == "TOO_MANY_ATTEMPTS_TRY_LATER":
+            return
+

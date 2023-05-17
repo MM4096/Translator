@@ -1,13 +1,13 @@
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QVBoxLayout, QGridLayout, \
-    QLineEdit, QStackedWidget, QHBoxLayout, QFrame, QDialog, QDialogButtonBox
+    QLineEdit, QStackedWidget, QHBoxLayout, QFrame, QDialog, QDialogButtonBox, QPlainTextEdit
 
 from enum import Enum
 
 import sys
 import pyrebase
 import asyncio
-from auth import Login, Register, ReturnEnum
+from auth import Login, Register, ReturnEnum, ResendVerificationEmail
 from writeFiles import WriteData, ReadData
 
 firebaseConfig = {
@@ -51,7 +51,7 @@ class MainWindow(QGridLayout):
         window.SetActiveWindow(window.PricingWindow)
 
     def TranslatePage(self):
-        pass
+        window.SetActiveWindow(window.TranslateWindow)
 
     def TranscribePage(self):
         pass
@@ -63,10 +63,39 @@ class MainWindow(QGridLayout):
         window.SetActiveWindow(window.MenuWindow)
 
 
+class EmailVerificationWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        ResendVerificationEmail(auth, user)
+        self.windowLayout = QVBoxLayout()
+        self.label = QLabel("Email verification")
+        self.info = QLabel("An email has been sent to your email address. Please verify your email address.")
+        self.resendButton = QPushButton("Resend email")
+        self.resendButton.clicked.connect(self.Resend)
+        self.close = QPushButton("Close")
+        self.close.clicked.connect(self.Close)
+
+        self.windowLayout.addWidget(self.label)
+        self.windowLayout.addWidget(self.info)
+        self.windowLayout.addWidget(self.resendButton)
+        self.windowLayout.addWidget(self.close)
+
+        self.setLayout(self.windowLayout)
+        self.show()
+
+    def Resend(self):
+        ResendVerificationEmail(auth, user)
+
+    def Close(self):
+        window.SetActiveWindow(window.MenuWindow)
+        self.deleteLater()
+
+
 class LoginWindow(QGridLayout):
     def __init__(self):
         super().__init__()
 
+        self.emailVerificationWindow = None
         self.label = QLabel("Log in")
 
         self.usernameInput = QLineEdit()
@@ -117,8 +146,12 @@ class LoginWindow(QGridLayout):
         if user is not None:
             self.usernameInput.setText("")
             self.passwordInput.setText("")
-            WriteData("user.data", email + "," + password)
-            window.SetActiveWindow(window.MainWindow)
+            emailVerified = auth.get_account_info(user["idToken"])["users"][0]["emailVerified"]
+            if emailVerified:
+                WriteData("user.data", email + "," + password)
+                window.SetActiveWindow(window.MainWindow)
+            else:
+                self.emailVerificationWindow = EmailVerificationWindow()
         else:
             if returnMessage == ReturnEnum.USER_DISABLED:
                 self.usernameError.setText("User is disabled")
@@ -200,6 +233,35 @@ class PricingWindow(QVBoxLayout):
             window.SetActiveWindow(window.MainWindow)
 
 
+class TranslateWindow(QVBoxLayout):
+    def __init__(self):
+        super().__init__()
+
+        self.label = QLabel("Translate")
+
+        self.recordButton = QPushButton("Record")
+        self.recordButton.clicked.connect(self.Record)
+
+        self.result = QPlainTextEdit()
+        self.result.resize(100, 100)
+        self.result.setReadOnly(True)
+        self.result.setPlainText("Result goes here")
+
+        self.backButton = QPushButton("Back")
+        self.backButton.clicked.connect(self.Back)
+
+        self.addWidget(self.label, Qt.AlignmentFlag.AlignCenter)
+        self.addWidget(self.recordButton, Qt.AlignmentFlag.AlignCenter)
+        self.addWidget(self.result, Qt.AlignmentFlag.AlignCenter)
+        self.addWidget(self.backButton, Qt.AlignmentFlag.AlignCenter)
+
+    def Record(self):
+        pass
+
+    def Back(self):
+        window.SetActiveWindow(window.MainWindow)
+
+
 class RegisterWindow(QGridLayout):
     def __init__(self):
         super().__init__()
@@ -258,6 +320,7 @@ class RegisterWindow(QGridLayout):
         returnMessage = result[1]
 
         if user is not None:
+            db.child("users").child(user["localId"]).set({"credit": 10})
             user = None
             self.usernameInput.hide()
             self.passwordInput.hide()
@@ -331,6 +394,7 @@ class WindowManager(QWidget):
         self.FRegisterWindow = RegisterWindow()
         self.FMainWindow = MainWindow()
         self.FPricingWindow = PricingWindow()
+        self.FTranslateWindow = TranslateWindow()
 
         self.LoginWindow = QFrame()
         self.LoginWindow.setLayout(self.FLoginWindow)
@@ -347,11 +411,15 @@ class WindowManager(QWidget):
         self.PricingWindow = QFrame()
         self.PricingWindow.setLayout(self.FPricingWindow)
 
+        self.TranslateWindow = QFrame()
+        self.TranslateWindow.setLayout(self.FTranslateWindow)
+
         self.Box.addWidget(self.LoginWindow)
         self.Box.addWidget(self.MenuWindow)
         self.Box.addWidget(self.RegisterWindow)
         self.Box.addWidget(self.MainWindow)
         self.Box.addWidget(self.PricingWindow)
+        self.Box.addWidget(self.TranslateWindow)
 
         self.setLayout(self.Box)
         self.show()
@@ -366,15 +434,17 @@ class WindowManager(QWidget):
         self.MainWindow.hide()
         self.FRegisterWindow.Reset()
         self.PricingWindow.hide()
+        self.TranslateWindow.hide()
 
         showWindow.show()
 
 
 async def LoginSavedUser():
     savedUser = ReadData("user.data")
-    if savedUser != "":
+    if savedUser != "" and savedUser is not None:
         global user
-        user = Login(auth, savedUser[0], savedUser[1])
+        savedUser = savedUser.split(",")
+        user = Login(auth, savedUser[0], savedUser[1])[0]
         if user is not None:
             window.SetActiveWindow(window.MainWindow)
 
@@ -389,4 +459,4 @@ if __name__ == "__main__":
 
     asyncio.run(LoginSavedUser())
 
-    app.exec()
+    sys.exit(app.exec())

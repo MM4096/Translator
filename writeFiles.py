@@ -10,6 +10,9 @@ def Encrypt(data):
         with open(path.join(user_data_dir("Translator", "mm4096"), "key.key"), "w") as key_file:
             key_file.write(key.decode("utf-8"))
 
+        with open(path.join(user_data_dir("Translator", "mm4096"), "IMPORTANT.md"), "w") as file:
+            file.write("Do not modify any of the files in this folder. If you do, your data may be corrupted")
+
     with open(path.join(user_data_dir("Translator", "mm4096"), "key.key"), "r") as key_file:
         key = key_file.read()
 
@@ -39,8 +42,11 @@ def WriteData(relPath, data):
 def ReadData(relPath):
     location = user_data_dir("Translator", "mm4096")
     if path.exists(location):
-        with open(path.join(location, relPath), "r") as f:
-            return Decrypt(f.read()).decode("utf-8")
+        try:
+            with open(path.join(location, relPath), "r") as f:
+                return Decrypt(f.read()).decode("utf-8")
+        except FileNotFoundError:
+            return None
     else:
         return None
 
