@@ -1,0 +1,63 @@
+QWidget {
+    background-color: #06655F;
+}
+
+QPushButton {
+    background-color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+QPushButton:hover {
+    background-color: #CCCCCC;
+}
+
+QLineEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.header {
+    font-size: 50px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+.errorMessage {
+    font-size: 20px;
+    color: #BB0000;
+    font-weight: bold;
+}
+
+.pricingPanel {
+    background-color: #FFFFFF;
+    border: 1px solid #FFFFFF;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.pricingPanel > * {
+    padding: 5px;
+}
+
+.pricingHeader {
+    font-size: 30px;
+    color: #06655F;
+    font-weight: bold;
+}
+
+.pricingPanel > QLabel {
+    background-color: #FFFFFF;
+}
+
+.pricingPanel > QPushButton {
+    padding: 10px;
+    background-color: #EEEEEE;
+}
+
+.pricingPanel > QPushButton:hover {
+    background-color: #CCCCCC;
+}

@@ -32,6 +32,7 @@ class MainWindow(QGridLayout):
         super().__init__()
 
         self.label = QLabel("Translator")
+        self.label.setProperty("class", "header")
         self.translateButton = QPushButton("Translate")
         self.translateButton.clicked.connect(self.TranslatePage)
         self.transcribeButton = QPushButton("Transcribe")
@@ -97,6 +98,7 @@ class LoginWindow(QGridLayout):
 
         self.emailVerificationWindow = None
         self.label = QLabel("Log in")
+        self.label.setProperty("class", "header")
 
         self.usernameInput = QLineEdit()
         self.usernameInput.setPlaceholderText("Enter your email")
@@ -119,9 +121,9 @@ class LoginWindow(QGridLayout):
         self.backButton.clicked.connect(self.Back)
 
         self.usernameError = QLabel()
-        self.usernameError.setStyleSheet("color: red")
+        self.usernameError.setProperty("class", "errorMessage")
         self.passwordError = QLabel()
-        self.passwordError.setStyleSheet("color: red")
+        self.passwordError.setProperty("class", "errorMessage")
 
         self.addWidget(self.label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignHCenter)
         self.addWidget(self.usernameInput, 1, 1, 1, 2)
@@ -176,14 +178,22 @@ class PricingWindow(QVBoxLayout):
         super().__init__()
 
         self.label = QLabel("Pricing")
+        self.label.setProperty("class", "header")
 
-        self.basicCredit = QVBoxLayout()
+        self.wBasicCredit = QWidget()
+        self.wBasicCredit.setProperty("class", "pricingPanel")
+        self.basicCredit = QVBoxLayout(self.wBasicCredit)
 
-        self.premiumCredit = QVBoxLayout()
+        self.wPremiumCredit = QWidget()
+        self.wPremiumCredit.setProperty("class", "pricingPanel")
+        self.premiumCredit = QVBoxLayout(self.wPremiumCredit)
 
-        self.bundleCredit = QVBoxLayout()
+        self.wBundleCredit = QWidget()
+        self.wBundleCredit.setProperty("class", "pricingPanel")
+        self.bundleCredit = QVBoxLayout(self.wBundleCredit)
 
         self.bcHeader = QLabel("Basic")
+        self.bcHeader.setProperty("class", "pricingHeader")
         self.bcContent = QLabel("+ 10 minutes")
         self.bcPrice = QLabel("$2")
         self.bcButton = QPushButton("Buy")
@@ -194,6 +204,7 @@ class PricingWindow(QVBoxLayout):
         self.basicCredit.addWidget(self.bcButton)
 
         self.pcHeader = QLabel("Premium")
+        self.pcHeader.setProperty("class", "pricingHeader")
         self.pcContent = QLabel("+30 minutes")
         self.pcPrice = QLabel("$5.50")
         self.pcButton = QPushButton("Buy")
@@ -204,6 +215,7 @@ class PricingWindow(QVBoxLayout):
         self.premiumCredit.addWidget(self.pcButton)
 
         self.bundleHeader = QLabel("Bundle")
+        self.bundleHeader.setProperty("class", "pricingHeader")
         self.bundleContent = QLabel("+ 60 minutes")
         self.bundlePrice = QLabel("$10")
         self.bundleButton = QPushButton("Buy")
@@ -215,9 +227,9 @@ class PricingWindow(QVBoxLayout):
 
         self.pricingLayouts = QHBoxLayout()
 
-        self.pricingLayouts.addLayout(self.basicCredit)
-        self.pricingLayouts.addLayout(self.premiumCredit)
-        self.pricingLayouts.addLayout(self.bundleCredit)
+        self.pricingLayouts.addWidget(self.wBasicCredit)
+        self.pricingLayouts.addWidget(self.wPremiumCredit)
+        self.pricingLayouts.addWidget(self.wBundleCredit)
 
         self.backButton = QPushButton("Back")
         self.backButton.clicked.connect(self.Back)
@@ -238,6 +250,7 @@ class TranslateWindow(QVBoxLayout):
         super().__init__()
 
         self.label = QLabel("Translate")
+        self.label.setProperty("class", "header")
 
         self.recordButton = QPushButton("Record")
         self.recordButton.clicked.connect(self.Record)
@@ -267,6 +280,7 @@ class RegisterWindow(QGridLayout):
         super().__init__()
 
         self.label = QLabel("Sign up")
+        self.label.setProperty("class", "header")
 
         self.usernameInput = QLineEdit()
         self.usernameInput.setPlaceholderText("Enter your email")
@@ -289,11 +303,11 @@ class RegisterWindow(QGridLayout):
         self.backButton.clicked.connect(self.Back)
 
         self.usernameError = QLabel()
-        self.usernameError.setStyleSheet("color: red")
+        self.usernameError.setProperty("class", "errorMessage")
         self.passwordError = QLabel()
-        self.passwordError.setStyleSheet("color: red")
+        self.passwordError.setProperty("class", "errorMessage")
         self.confirmPasswordError = QLabel()
-        self.confirmPasswordError.setStyleSheet("color: red")
+        self.confirmPasswordError.setProperty("class", "errorMessage")
 
         self.addWidget(self.label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignHCenter)
         self.addWidget(self.usernameInput, 1, 1, 1, 2)
@@ -362,6 +376,7 @@ class MenuWindow(QGridLayout):
         super().__init__()
 
         label = QLabel("Translator")
+        label.setProperty("class", "header")
         loginButton = QPushButton("Login")
         loginButton.clicked.connect(self.Login)
         registerButton = QPushButton("Register")
@@ -455,6 +470,8 @@ if __name__ == "__main__":
     window = WindowManager()
     window.setFixedSize(600, 600)
     window.show()
+    with open("stylesheets/style.css", "r") as f:
+        window.setStyleSheet(f.read())
     window.SetActiveWindow(window.MenuWindow)
 
     asyncio.run(LoginSavedUser())
