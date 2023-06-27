@@ -1,3 +1,4 @@
+import requests.exceptions
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QLabel, QVBoxLayout, QGridLayout, \
     QLineEdit, QStackedWidget, QHBoxLayout, QFrame, QDialog, QDialogButtonBox, QPlainTextEdit
@@ -250,6 +251,7 @@ class TranslateWindow(QVBoxLayout):
         super().__init__()
 
         self.label = QLabel("Translate")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setProperty("class", "header")
 
         self.recordButton = QPushButton("Record")
@@ -455,13 +457,16 @@ class WindowManager(QWidget):
 
 
 async def LoginSavedUser():
-    savedUser = ReadData("user.data")
-    if savedUser != "" and savedUser is not None:
-        global user
-        savedUser = savedUser.split(",")
-        user = Login(auth, savedUser[0], savedUser[1])[0]
-        if user is not None:
-            window.SetActiveWindow(window.MainWindow)
+    try:
+        savedUser = ReadData("user.data")
+        if savedUser != "" and savedUser is not None:
+            global user
+            savedUser = savedUser.split(",")
+            user = Login(auth, savedUser[0], savedUser[1])[0]
+            if user is not None:
+                window.SetActiveWindow(window.MainWindow)
+    except requests.exceptions.ConnectionError:
+        pass
 
 
 if __name__ == "__main__":
