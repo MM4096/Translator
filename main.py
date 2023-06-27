@@ -472,6 +472,7 @@ async def LoginSavedUser():
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
+
     window = WindowManager()
     window.setFixedSize(600, 600)
     window.show()
